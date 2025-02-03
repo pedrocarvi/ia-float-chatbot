@@ -1,0 +1,11 @@
+.btn-not-opened {
+    opacity: 1;
+    transform: none;
+    border-radius: 100px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    padding: 15px;
+    background-color: #8BDC65;
+    cursor: pointer;
+    position: relative;
+    top: 10px;
+}

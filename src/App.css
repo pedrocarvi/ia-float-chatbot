@@ -1,0 +1,8 @@
+.App {
+  width: 100%;
+  height: 90vh;
+  display: flex;
+  justify-content: flex-end;
+  align-items: end;
+  padding-right: 30px;
+}
