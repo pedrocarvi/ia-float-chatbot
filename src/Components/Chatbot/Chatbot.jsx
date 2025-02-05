@@ -1,11 +1,18 @@
 import React, { useState } from "react";
 import './Chatbot.css';
 import { motion } from "framer-motion";
-import { X, MessageCircle } from "lucide-react";
+import { X, MessageCircle, Send } from "lucide-react";
 import axios from "axios";
 
 const Chatbot = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const [formSubmitted, setFormSubmitted] = useState(false);
+  const [formData, setFormData] = useState({
+    nombre: "",
+    email: "",
+    nroAsociado: "",
+  });
+
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
@@ -15,7 +22,31 @@ const Chatbot = () => {
     setIsOpen(!isOpen);
   };
 
-  // Handle user input submission
+  // Manejo de cambio de inputs en el formulario
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  // Manejo del envío del formulario
+  const handleFormSubmit = (e) => {
+    e.preventDefault();
+
+    // Validación simple: asegurarse que nombre y email no estén vacíos.
+    if (!formData.nombre || !formData.email) {
+      alert("Por favor, completa los campos obligatorios.");
+      return;
+    }
+
+    console.log("Acá podriamos hacer la llamada a la API de Leads si el usuario no ingresa nro. asociado")
+    console.log("Datos del formulario:", formData);
+    setFormSubmitted(true);
+  };
+
+  // Handle user input submission (chat)
   const handleSend = async () => {
     if (!input.trim()) return;
 
@@ -46,57 +77,107 @@ const Chatbot = () => {
   };
 
   return (
-    <div className="fixed bottom-5 right-5 z-50 max-w-[450px]">
+    <div>
       {isOpen ? (
         <motion.div
           initial={{ opacity: 0, y: 50 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: 50 }}
-          className="w-full h-96 bg-white rounded-lg shadow-xl border p-4 flex flex-col justify-between chatbot-container"
+          className="chatbot-container"
         >
-          {/* Chat header */}
-          <div className="flex items-center justify-between border-b pb-2">
-            <h2 className="text-lg font-semibold">Asistente Virtual</h2>
-            <button onClick={toggleChatbot} className="text-gray-500 hover:text-gray-700">
-              <X size={20} />
+          {/* Cabecera del chatbot */}
+          <div className="chatbot-header">
+            <h2>Ava - Asistente Virtual</h2>
+            <button onClick={toggleChatbot}>
+              <X size={20} color="white" />
             </button>
           </div>
 
-          {/* Chat messages */}
-          <div className="flex-1 overflow-y-auto mt-2 mb-4 chatbot-messages">
-            {messages.map((message, index) => (
-              <div key={index} className={`mb-2 ${message.role === "user" ? "text-right" : "text-left"}`}>
-                <p
-                  className={`inline-block px-3 py-2 rounded-xl shadow-md ${
-                    message.role === "user"
-                      ? "bg-blue-600 text-white self-end"
-                      : "bg-gray-200 text-gray-800"
-                  }`}
-                >
-                  {message.content}
-                </p>
+          {/* Si el formulario no fue enviado, se muestra el formulario */}
+          {!formSubmitted ? (
+            <div className="chatbot-form-container">
+              <form onSubmit={handleFormSubmit}>
+                <div className="chatbot-form-input-ctn">
+                  <label className="chatbot-form-label">
+                    Nombre:
+                    <input
+                      type="text"
+                      name="nombre"
+                      value={formData.nombre}
+                      onChange={handleInputChange}
+                      placeholder="Ingrese su nombre"
+                      required
+                    />
+                  </label>
+                </div>
+                <div className="chatbot-form-input-ctn">
+                  <label className="chatbot-form-label">
+                    Email:
+                    <input
+                      type="email"
+                      name="email"
+                      value={formData.email}
+                      onChange={handleInputChange}
+                      placeholder="Ingrese su email"
+                      required
+                    />
+                  </label>
+                </div>
+                <div className="chatbot-form-input-ctn">
+                  <label className="chatbot-form-label">
+                    Nº de Asociado (opcional):
+                    <input
+                      type="text"
+                      name="nroAsociado"
+                      value={formData.nroAsociado}
+                      onChange={handleInputChange}
+                      placeholder="Ingrese su nro. de asociado"
+                    />
+                  </label>
+                </div>
+                <button type="submit" className="chatbot-form-btn">Iniciar Chat</button>
+              </form>
+            </div>
+          ) : (
+            // Si el formulario fue enviado, se muestra la interfaz del chat.
+            <>
+              {/* Mensajes del chat */}
+              <div className="chatbot-messages">
+                {messages.map((message, index) => (
+                  <div key={index}>
+                    <p
+                      className={`chatbot-message ${message.role === "user" ? "chatbot-message-user" : "chatbot-message-bot"}`}
+                    >
+                      {message.content}
+                    </p>
+                  </div>
+                ))}
+                {loading && <p className="writing-text">Escribiendo...</p>}
               </div>
-            ))}
-            {loading && <p className="text-gray-500">Escribiendo...</p>}
-          </div>
 
-          {/* Chat input */}
-          <div className="flex items-center">
-            <input
-              type="text"
-              placeholder="Haz una pregunta..."
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && handleSend()}
-              className="flex-1 border border-gray-300 rounded-l-lg p-2 focus:outline-none chatbot-input"
-            />
-            <button
-              onClick={handleSend}
-              className="bg-blue-500 text-white px-4 py-2 rounded-r-lg hover:bg-blue-600 chatbot-send-btn"
-            >
-              Enviar
-            </button>
-          </div>
+              {/* Input para enviar mensajes */}
+              <div className="chatbot-msg-send-container">
+                <div className="chatbot-msg-send">
+                  <input
+                    type="text"
+                    placeholder="Haz una pregunta..."
+                    value={input}
+                    onChange={(e) => setInput(e.target.value)}
+                    onKeyDown={(e) => e.key === "Enter" && handleSend()}
+                    className="chatbot-input"
+                  />
+                  <button onClick={handleSend} className="chatbot-send-btn">
+                    <Send width={20} color="white" />
+                  </button>
+                </div>
+
+                {/* Boton Contacto por WhatsApp */}
+                <a href="https://api.whatsapp.com/send?phone=541126320419&&text=Hola!%20buen%20d%C3%ADa" target="_blank" className="asesor-whatsapp-btn">
+                  Contactar asesor vía WhatsApp
+                </a>
+              </div>
+            </>
+          )}
         </motion.div>
       ) : (
         <motion.button
