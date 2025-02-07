@@ -58,6 +58,7 @@ const Chatbot = () => {
     try {
       const response = await axios.post("http://localhost:5002/chatbot-web", {
         question: input,
+        asociadoNumber: formData.nroAsociado
       });
 
       const botResponse = {
